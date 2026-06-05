@@ -40,10 +40,15 @@ class Settings(BaseSettings):
     REASONING_MODEL_PARALLEL_TOOL_CALLS: bool = False
 
     # ---------------- 文件生成目录 ----------------
-    CODE_OUTPUT_ROOT_DIR: str = str((Path(__file__).resolve().parents[3] / "tmp" / "code_output").resolve())
+    # 与 Java FileConstant.FILE_SAVE_DIR（user.dir + "/tmp"）对齐：固定为仓库根目录下的 tmp
+    FILE_SAVE_DIR: str = str((Path(__file__).resolve().parents[2] / "tmp").resolve())
 
     # 开启 LangChain 的全局 Debug 和 Request 日志 (对应你 yaml 里的 log-requests: true)
     LANGCHAIN_VERBOSE: bool = True
+
+    SEARCH_API_KEY: str
+    PEXELS_API_KEY: str
+    AMAP_API_KEY: str
 
     model_config = SettingsConfigDict(
         env_file=('.env.dev', '.env.local'), 

@@ -5,7 +5,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 
 from app.models.schemas import RouteDecision, RouteRequest, RouteResponse, RouteType
 from app.models.llm import create_routing_model
-from app.models.route_prompts import ROUTING_SYSTEM_PROMPT
+from app.prompt.route_prompts import ROUTING_SYSTEM_PROMPT
 
 _ROUTE_RULES: list[tuple[re.Pattern[str], RouteType, str]] = [
     (

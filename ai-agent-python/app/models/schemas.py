@@ -1,6 +1,5 @@
 from enum import Enum
-from typing import Any, Optional
-
+from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field, field_validator
 
 
@@ -43,3 +42,16 @@ class RouteResponse(BaseModel):
     routeType: str
     enumName: str
     reason: str
+
+
+class ChatRequest(BaseModel):
+    message: str = Field(..., min_length=1)
+    userId: str = Field(..., min_length=1)
+    chatId: str = Field(..., min_length=1)
+    routeType: RouteType = Field(..., description="Recommended agent type")
+
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+    timestamp: Optional[int] = None
+    metadata: Optional[Dict[str, Any]] = None
