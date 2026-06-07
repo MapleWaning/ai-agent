@@ -39,9 +39,35 @@ class Settings(BaseSettings):
     REASONING_MODEL_TIMEOUT: int = 600
     REASONING_MODEL_PARALLEL_TOOL_CALLS: bool = False
 
+    # ---------------- 向量模型 (Qwen) ----------------
+    VECTOR_MODEL_BASE_URL: str
+    VECTOR_MODEL_API_KEY: str
+    VECTOR_MODEL_NAME: str
+    VECTOR_MODEL_INPUT_FORMAT: str
+    VECTOR_MODEL_MAX_TOKENS: int = 8192
+    VECTOR_MODEL_TIMEOUT: int = 600
+    VECTOR_MODEL_DIMENSION: int
+    # ---------------- PostgreSQL ----------------
+    POSTGRES_HOST: str
+    POSTGRES_PORT: int
+    POSTGRES_DB: str
+    POSTGRES_USER: str
+    POSTGRES_PASSWORD: str
+    DATABASE_URL: str
+    # ---------------- PgVector ----------------
+    PGVECTOR_TABLE_NAME: str
+    PGVECTOR_SCHEMA_NAME: str
+    PGVECTOR_DIMENSIONS: int
+    PGVECTOR_DISTANCE_TYPE: str
+    PGVECTOR_INDEX_TYPE: str
+    PGVECTOR_MAX_DOCUMENT_BATCH_SIZE: int
+    PGVECTOR_INIT_SCHEMA: bool
     # ---------------- 文件生成目录 ----------------
     # 与 Java FileConstant.FILE_SAVE_DIR（user.dir + "/tmp"）对齐：固定为仓库根目录下的 tmp
     FILE_SAVE_DIR: str = str((Path(__file__).resolve().parents[2] / "tmp").resolve())
+    DEFAULT_DOCUMENT_DIR: str = str(
+        (Path(__file__).resolve().parents[1] / "data" / "document").resolve()
+    )
 
     # 开启 LangChain 的全局 Debug 和 Request 日志 (对应你 yaml 里的 log-requests: true)
     LANGCHAIN_VERBOSE: bool = True
@@ -49,6 +75,12 @@ class Settings(BaseSettings):
     SEARCH_API_KEY: str
     PEXELS_API_KEY: str
     AMAP_API_KEY: str
+
+    TOKEN_TEXT_SPLITTER_CHUNK_SIZE: int = 500
+    TOKEN_TEXT_SPLITTER_CHUNK_OVERLAP: int = 100
+
+    RAG_RETRIEVAL_TOP_K: int = 3
+    RAG_SCORE_THRESHOLD: float = 0.6
 
     model_config = SettingsConfigDict(
         env_file=('.env.dev', '.env.local'), 

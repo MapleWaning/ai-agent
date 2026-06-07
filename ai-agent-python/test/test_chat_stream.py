@@ -36,6 +36,10 @@ def mock_mcp_tools(monkeypatch: pytest.MonkeyPatch) -> None:
         "app.executors.mcp_executor.get_amap_mcp_tools",
         fake_get_amap_mcp_tools,
     )
+    monkeypatch.setattr(
+        "app.tools.tool_registry.get_amap_mcp_tools",
+        fake_get_amap_mcp_tools,
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -54,13 +58,25 @@ def mock_stream_langchain_agent(monkeypatch: pytest.MonkeyPatch) -> None:
     )
 
 
+@pytest.fixture(autouse=True)
+def mock_rag_service(monkeypatch: pytest.MonkeyPatch) -> None:
+    class FakeRAGService:
+        def assemble_message(self, user_message: str) -> str:
+            return f"知识库参考内容：\ntest context\n\n用户问题：\n{user_message}"
+
+    monkeypatch.setattr(
+        "app.executors.rag_executor.get_rag_service",
+        lambda: FakeRAGService(),
+    )
+
+
 STREAM_CASES = [
     ("normal_chat", "NORMAL_CHAT", "data: 你好"),
     ("report", "REPORT", "data: 你好"),
-    ("rag", "RAG", "[RAG] executor placeholder"),
+    ("rag", "RAG", "data: 你好"),
     ("mcp", "MCP", "data: 你好"),
     ("tool", "TOOL", "data: 你好"),
-    ("workflow", "WORKFLOW", "[WORKFLOW] executor placeholder"),
+    ("workflow", "WORKFLOW", "data: 你好"),
 ]
 
 
@@ -87,6 +103,6 @@ def test_chat_stream_dispatches_to_executor(
     print(f"响应内容: {body.strip()}")
 
     assert expected_marker in body
-    if route_type in {"normal_chat", "report", "mcp", "tool"}:
+    if route_type in {"normal_chat", "report", "rag", "mcp", "tool", "workflow"}:
         assert "data: ，世界" in body
         assert "data: done" in body

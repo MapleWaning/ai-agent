@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from fpdf import FPDF
+from fpdf.enums import XPos, YPos
 from langchain.tools import ToolRuntime, tool
 
 from app.settings import settings
@@ -43,7 +44,13 @@ def _build_pdf(content: str, file_path: Path) -> None:
     pdf.set_auto_page_break(auto=True, margin=15)
     pdf.add_page()
     for line in content.splitlines() or [""]:
-        pdf.multi_cell(pdf.epw, 8, line)
+        pdf.multi_cell(
+            pdf.epw,
+            8,
+            line,
+            new_x=XPos.LMARGIN,
+            new_y=YPos.NEXT,
+        )
     pdf.output(str(file_path))
 
 

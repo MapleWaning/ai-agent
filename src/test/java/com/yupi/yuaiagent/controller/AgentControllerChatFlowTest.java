@@ -20,7 +20,7 @@ import java.time.Duration;
 class AgentControllerChatFlowTest {
 
     private static final String USER_ID = "1";
-    private static final String MESSAGE = "你好，我是小明，我想了解历史上有什么有名的恋爱高手，帮我在网上搜下";
+    private static final String MESSAGE = "你好，我是小明，帮我在网上搜索知名的恋爱故事，并给出一份报告，写到pdf中";
 
     @Resource
     private AgentController agentController;
