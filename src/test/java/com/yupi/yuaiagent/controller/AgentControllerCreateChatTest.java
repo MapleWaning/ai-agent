@@ -1,5 +1,6 @@
 package com.yupi.yuaiagent.controller;
 
+import com.yupi.yuaiagent.common.BaseResponse;
 import jakarta.annotation.Resource;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -18,7 +19,8 @@ class AgentControllerCreateChatTest {
 
     @Test
     void testCreateChat() {
-        Integer chatId = agentController.createChat("1");
+        BaseResponse<Integer> response = agentController.createChat(TestHttpRequestFactory.loginRequest(1));
+        Integer chatId = response.getData();
         System.out.println("createChat 返回 chatId: " + chatId);
         Assertions.assertNotNull(chatId);
         Assertions.assertTrue(chatId > 0);

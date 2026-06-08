@@ -1,19 +1,22 @@
 package com.yupi.yuaiagent.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.yupi.yuaiagent.common.BaseResponse;
 import com.yupi.yuaiagent.model.dto.ChatRequest;
 import com.yupi.yuaiagent.model.dto.RouteRequest;
 import com.yupi.yuaiagent.model.entity.Chat;
+import com.yupi.yuaiagent.model.vo.LoginUserVO;
 import com.yupi.yuaiagent.model.vo.RouteResponse;
 import com.yupi.yuaiagent.service.ChatHistoryService;
 import com.yupi.yuaiagent.service.ChatService;
+import com.yupi.yuaiagent.service.UserService;
 import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestClient;
 import reactor.core.publisher.Flux;
@@ -44,6 +47,9 @@ public class AgentController {
     @Resource
     private ObjectMapper objectMapper;
 
+    @Resource
+    private UserService userService;
+
     public AgentController(@Value("${python-agent.base-url:http://localhost:8000}") String pythonBaseUrl) {
         this.pythonBaseUrl = pythonBaseUrl;
         this.restClient = RestClient.builder()
@@ -55,31 +61,37 @@ public class AgentController {
      * 路由决策：转发至 Python 服务的 /ai/chat/route
      */
     @PostMapping("/chat/route")
-    public RouteResponse routing(@RequestBody RouteRequest request) {
-        return restClient.post()
+    public BaseResponse<RouteResponse> routing(@RequestBody RouteRequest request) {
+        RouteResponse routeResponse = restClient.post()
                 .uri("/ai/chat/route")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .retrieve()
                 .body(RouteResponse.class);
+        return BaseResponse.success(routeResponse);
     }
 
     /**
      * 创建会话
      */
     @PostMapping("/chat/create")
-    public Integer createChat(@RequestParam String userId) {
+    public BaseResponse<Integer> createChat(HttpServletRequest httpRequest) {
+        LoginUserVO loginUser = userService.getLoginUser(httpRequest);
         Chat chat = new Chat();
-        chat.setUserId(Integer.valueOf(userId));
+        chat.setUserId(loginUser.getUserId());
         chatService.save(chat);
-        return chat.getChatId();
+        return BaseResponse.success(chat.getChatId());
     }
 
     /**
      * 流式对话：预加载记忆 → 转发 Python /ai/chat/stream → 落库 AI 回复
+     * SSE 流式响应，保持 Flux 直出，不使用 BaseResponse 包装
      */
     @PostMapping(value = "/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<String> chatStream(@RequestBody ChatRequest request) {
+    public Flux<String> chatStream(@RequestBody ChatRequest request, HttpServletRequest httpRequest) {
+        LoginUserVO loginUser = userService.getLoginUser(httpRequest);
+        request.setUserId(String.valueOf(loginUser.getUserId()));
+
         chatHistoryService.preload(request.getUserId(), request.getChatId(), request.getMessage());
 
         final String requestBody;
@@ -93,7 +105,7 @@ public class AgentController {
                     try {
                         StringBuilder aiResponse = new StringBuilder();
                         HttpClient httpClient = HttpClient.newHttpClient();
-                        HttpRequest httpRequest = HttpRequest.newBuilder()
+                        HttpRequest pythonHttpRequest = HttpRequest.newBuilder()
                                 .uri(URI.create(pythonBaseUrl + "/ai/chat/stream"))
                                 .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                                 .header("Accept", MediaType.TEXT_EVENT_STREAM_VALUE)
@@ -101,7 +113,7 @@ public class AgentController {
                                 .build();
 
                         HttpResponse<InputStream> response = httpClient.send(
-                                httpRequest, HttpResponse.BodyHandlers.ofInputStream());
+                                pythonHttpRequest, HttpResponse.BodyHandlers.ofInputStream());
                         if (response.statusCode() != 200) {
                             sink.error(new IllegalStateException(
                                     "Python chat stream failed: HTTP " + response.statusCode()));

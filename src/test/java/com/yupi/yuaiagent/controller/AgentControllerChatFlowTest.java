@@ -1,5 +1,6 @@
 package com.yupi.yuaiagent.controller;
 
+import com.yupi.yuaiagent.common.BaseResponse;
 import com.yupi.yuaiagent.model.dto.ChatRequest;
 import com.yupi.yuaiagent.model.dto.RouteRequest;
 import com.yupi.yuaiagent.model.enums.RouteType;
@@ -28,7 +29,8 @@ class AgentControllerChatFlowTest {
     @Test
     void testCreateRouteAndStream() {
         // 1. /chat/create
-        Integer chatId = agentController.createChat(USER_ID);
+        BaseResponse<Integer> createResponse = agentController.createChat(TestHttpRequestFactory.loginRequest(Integer.valueOf(USER_ID)));
+        Integer chatId = createResponse.getData();
         System.out.println("createChat 返回 chatId: " + chatId);
         Assertions.assertNotNull(chatId);
         Assertions.assertTrue(chatId > 0);
@@ -36,7 +38,8 @@ class AgentControllerChatFlowTest {
         // 2. /chat/route
         RouteRequest routeRequest = new RouteRequest();
         routeRequest.setInitPrompt(MESSAGE);
-        RouteResponse routeResponse = agentController.routing(routeRequest);
+        BaseResponse<RouteResponse> routeResult = agentController.routing(routeRequest);
+        RouteResponse routeResponse = routeResult.getData();
         System.out.println("routeType: " + routeResponse.getRouteType());
         System.out.println("enumName: " + routeResponse.getEnumName());
         System.out.println("reason: " + routeResponse.getReason());
@@ -49,7 +52,6 @@ class AgentControllerChatFlowTest {
         System.out.println("reason: " + routeResponse.getReason());
         // 3. /chat/stream
         ChatRequest chatRequest = new ChatRequest();
-        chatRequest.setUserId(USER_ID);
         chatRequest.setChatId(String.valueOf(chatId));
         chatRequest.setMessage(MESSAGE);
         chatRequest.setRouteType(routeType);
@@ -61,7 +63,7 @@ class AgentControllerChatFlowTest {
         System.out.print("AI: ");
 
         StringBuilder aiResponse = new StringBuilder();
-        agentController.chatStream(chatRequest)
+        agentController.chatStream(chatRequest, TestHttpRequestFactory.loginRequest(Integer.valueOf(USER_ID)))
                 .doOnNext(chunk -> {
                     if ("done".equalsIgnoreCase(chunk)) {
                         System.out.println("\n[done]");

@@ -36,7 +36,6 @@ class AgentControllerChatStreamTest {
 
         for (int i = 0; i < messages.length; i++) {
             ChatRequest request = new ChatRequest();
-            request.setUserId(USER_ID);
             request.setChatId(CHAT_ID);
             request.setMessage(messages[i]);
             request.setRouteType(RouteType.NORMAL_CHAT);
@@ -47,7 +46,7 @@ class AgentControllerChatStreamTest {
             System.out.print("AI: ");
 
             StringBuilder aiResponse = new StringBuilder();
-            agentController.chatStream(request)
+            agentController.chatStream(request, TestHttpRequestFactory.loginRequest(Integer.valueOf(USER_ID)))
                     .doOnNext(chunk -> {
                         if ("done".equalsIgnoreCase(chunk)) {
                             System.out.println("\n[done]");
