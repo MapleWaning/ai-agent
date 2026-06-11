@@ -30,7 +30,7 @@ async function handleLogout() {
   <header class="app-header">
     <div class="app-header__brand">
       <el-icon class="app-header__logo"><MagicStick /></el-icon>
-      <span class="app-header__title">AI 智能体</span>
+      <span class="app-header__title">恋爱咨询智能体</span>
     </div>
 
     <div v-if="isLoggedIn" class="app-header__user">

@@ -45,7 +45,7 @@ function handleSend(text: string) {
       <!-- 欢迎 / 空状态 -->
       <div v-if="messages.length === 0 && !historyLoading" class="chat-window__welcome">
         <el-icon class="chat-window__welcome-icon"><ChatDotRound /></el-icon>
-        <h2>欢迎使用 AI 智能体</h2>
+        <h2>欢迎使用 恋爱咨询智能体</h2>
         <p>请输入你的问题，开始一次新的对话。</p>
       </div>
 
