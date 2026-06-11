@@ -1,4 +1,5 @@
 from collections.abc import AsyncIterator, Sequence
+from typing import Any
 
 from langchain.agents import create_agent
 from langchain_core.messages import AIMessageChunk, BaseMessage, SystemMessage
@@ -37,7 +38,7 @@ async def stream_langchain_agent(
     messages: list[BaseMessage],
     tools: Sequence[BaseTool],
     context: ChatContext | None = None,
-) -> AsyncIterator[str]:
+) -> AsyncIterator[Any]:
     system_prompt, agent_messages = _split_messages(messages)
     agent = create_agent(
         model,
@@ -47,19 +48,31 @@ async def stream_langchain_agent(
     )
 
     stream_kwargs: dict = {
-        "stream_mode": "messages",
+        "stream_mode": ["messages", "custom"],
+        "version": "v2",
     }
     if context is not None:
         stream_kwargs["context"] = context
 
-    async for message_chunk, metadata in agent.astream(
+    async for chunk in agent.astream(
         {"messages": agent_messages},
         **stream_kwargs,
     ):
-        if metadata.get("langgraph_node") != "model":
+        if isinstance(chunk, dict) and chunk.get("type") == "messages":
+            message_chunk, metadata = chunk["data"]
+            if metadata.get("langgraph_node") != "model":
+                continue
+            if isinstance(message_chunk, AIMessageChunk):
+                yield message_chunk
             continue
-        if not isinstance(message_chunk, AIMessageChunk):
+
+        if isinstance(chunk, dict) and chunk.get("type") == "custom":
+            yield chunk["data"]
             continue
-        text = extract_chunk_text(message_chunk)
-        if text:
-            yield text
+
+        if isinstance(chunk, AIMessageChunk):
+            yield chunk
+            continue
+
+        if isinstance(chunk, dict) and "event" in chunk:
+            yield chunk

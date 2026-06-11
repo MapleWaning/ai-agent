@@ -202,6 +202,36 @@ class UserServiceImplTest {
         assertEquals("user", loginUser.getRole());
     }
 
+    @Test
+    void checkAdmin_notAdmin() {
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        HttpSession session = mock(HttpSession.class);
+        LoginUserVO sessionUser = new LoginUserVO();
+        sessionUser.setUserId(1);
+        when(request.getSession(false)).thenReturn(session);
+        when(session.getAttribute(UserConstant.USER_LOGIN_STATE)).thenReturn(sessionUser);
+        when(userMapper.selectById(1)).thenReturn(buildUser(1, "testuser", VALID_PASSWORD));
+
+        BusinessException exception = assertThrows(BusinessException.class, () -> userService.checkAdmin(request));
+
+        assertEquals(ErrorCode.NO_AUTH_ERROR.getCode(), exception.getCode());
+    }
+
+    @Test
+    void checkAdmin_success() {
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        HttpSession session = mock(HttpSession.class);
+        LoginUserVO sessionUser = new LoginUserVO();
+        sessionUser.setUserId(1);
+        when(request.getSession(false)).thenReturn(session);
+        when(session.getAttribute(UserConstant.USER_LOGIN_STATE)).thenReturn(sessionUser);
+        User admin = buildUser(1, "admin", VALID_PASSWORD);
+        admin.setRole(UserConstant.ADMIN_ROLE);
+        when(userMapper.selectById(1)).thenReturn(admin);
+
+        userService.checkAdmin(request);
+    }
+
     private UserRegisterRequest buildRegisterRequest(String account, String password, String checkPassword) {
         UserRegisterRequest request = new UserRegisterRequest();
         request.setUserAccount(account);

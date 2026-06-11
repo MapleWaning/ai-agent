@@ -11,14 +11,17 @@ import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/chat/file")
 public class ChatFileController {
@@ -64,5 +67,20 @@ public class ChatFileController {
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition.toString())
                 .body(resource);
+    }
+
+    /**
+     * 删除某个对话生成的指定文件
+     */
+    @DeleteMapping("/delete")
+    public boolean deleteFile(@RequestBody FileRequest fileRequest,
+                              HttpServletRequest request) {
+        LoginUserVO loginUser = userService.getLoginUser(request);
+        chatFileService.deleteFile(
+                loginUser.getUserId().longValue(),
+                fileRequest.getChatId(),
+                fileRequest.getFileName()
+        );
+        return true;
     }
 }

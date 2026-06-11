@@ -33,7 +33,7 @@ public class ChatHistoryServiceImpl extends ServiceImpl<ChatHistoryMapper, ChatH
     private ObjectMapper objectMapper;
 
     @Override
-    public void preload(String userId, String chatId, String UserMessage) {
+    public void preload(String userId, String chatId, String UserMessage, String type) {
         String sessionId = buildSessionId(userId, chatId);
         String redisKey = redisKeyPrefix + sessionId;
 
@@ -61,6 +61,7 @@ public class ChatHistoryServiceImpl extends ServiceImpl<ChatHistoryMapper, ChatH
         record.setUserId(uid);
         record.setChatId(cid);
         record.setContent(buildHumanMessageJson(UserMessage));
+        record.setType(type);
         save(record);
     }
 
@@ -92,21 +93,30 @@ public class ChatHistoryServiceImpl extends ServiceImpl<ChatHistoryMapper, ChatH
     }
 
     @Override
-    public void saveAiResponse(String userId, String chatId, String AiResponse) {
+    public void saveAiResponse(String userId, String chatId, String AiResponse, String type, List<Map<String, Object>> streamEvents) {
         ChatHistory record = new ChatHistory();
         record.setUserId(Integer.valueOf(userId));
         record.setChatId(Integer.valueOf(chatId));
-        record.setContent(buildAiMessageJson(AiResponse));
+        record.setContent(buildAiMessageJson(AiResponse, type, streamEvents));
+        record.setType(type);
         save(record);
     }
 
     /**
      * 构造 LangChain message_to_dict(AIMessage) 格式 JSON
      */
-    private String buildAiMessageJson(String content) {
+    private String buildAiMessageJson(
+        String content,
+        String type,
+        List<Map<String, Object>> streamEvents
+    ) {
+        Map<String, Object> additionalKwargs = new LinkedHashMap<>();
+        additionalKwargs.put("routeType", type);
+        additionalKwargs.put("events", streamEvents == null ? Collections.emptyList() : streamEvents);
+
         Map<String, Object> data = new LinkedHashMap<>();
-        data.put("content", content);
-        data.put("additional_kwargs", Collections.emptyMap());
+        data.put("content", content == null ? "" : content);
+        data.put("additional_kwargs", additionalKwargs);
         data.put("response_metadata", Collections.emptyMap());
         data.put("type", "ai");
         data.put("name", null);

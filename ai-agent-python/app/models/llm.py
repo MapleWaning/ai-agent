@@ -24,6 +24,16 @@ def create_routing_model() -> ChatOpenAI:
     )
 
 
+def create_efficient_model(streaming: bool = True) -> ChatOpenAI:
+    return ChatOpenAI(
+        api_key=settings.DEFAULT_MODEL_API_KEY,
+        base_url=settings.DEFAULT_MODEL_BASE_URL,
+        model=settings.DEFAULT_MODEL_NAME,
+        max_tokens=settings.DEFAULT_MODEL_MAX_TOKENS,
+        timeout=settings.DEFAULT_MODEL_TIMEOUT,
+        streaming=streaming,
+    )
+
 def create_reasoning_model(streaming: bool = True) -> ChatOpenAI:
     return ChatOpenAI(
         api_key=settings.REASONING_MODEL_API_KEY,

@@ -15,6 +15,6 @@ public class WebAuthConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(loginAuthInterceptor)
                 .addPathPatterns("/user/**", "/agent/**", "/chatHistory/**", "/chat/file/**")
-                .excludePathPatterns("/user/login", "/user/register");
+                .excludePathPatterns("/user/login", "/user/register", "/user/logout");
     }
 }

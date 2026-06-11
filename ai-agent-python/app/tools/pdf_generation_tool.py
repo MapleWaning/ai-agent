@@ -7,7 +7,11 @@ from langchain.tools import ToolRuntime, tool
 from app.settings import settings
 from app.util.chat_context import ChatContext
 from app.util.pdf_font import CHINESE_FONT_FAMILY, resolve_chinese_font
+from app.util.tool_stream import emit_file, emit_tool_end, emit_tool_error, emit_tool_start
 from app.util.workspace_path import ensure_parent_directory
+
+_TOOL_NAME = "generate_pdf"
+_TOOL_LABEL = "生成 PDF"
 
 
 def _resolve_pdf_path(runtime: ToolRuntime[ChatContext], file_name: str) -> Path:
@@ -61,10 +65,14 @@ def generate_pdf(
     runtime: ToolRuntime[ChatContext],
 ) -> str:
     """Generate a PDF file with the given name and content in the current chat workspace."""
+    emit_tool_start(_TOOL_NAME, _TOOL_LABEL, file_name)
     try:
         pdf_name = _normalize_pdf_name(file_name)
         file_path = ensure_parent_directory(_resolve_pdf_path(runtime, pdf_name))
         _build_pdf(content, file_path)
+        emit_tool_end(_TOOL_NAME, _TOOL_LABEL, "生成 PDF 完成")
+        emit_file(pdf_name, action="created", summary=f"PDF {pdf_name} 已生成")
         return f"PDF generated successfully to: {file_path}"
     except Exception as exc:
+        emit_tool_error(_TOOL_NAME, _TOOL_LABEL, f"生成 PDF 失败: {exc}", file_name)
         return f"Error generating PDF: {exc}"

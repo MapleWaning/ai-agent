@@ -133,6 +133,32 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return currentUser;
     }
 
+    @Override
+    public void checkAdmin(HttpServletRequest request) {
+        LoginUserVO loginUser = getLoginUser(request);
+        if (!UserConstant.ADMIN_ROLE.equals(loginUser.getRole())) {
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+        }
+    }
+
+    @Override
+    public void userLogout(HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
+        HttpSession session = httpRequest.getSession(false);
+        if (session != null) {
+            Object loginUserObj = session.getAttribute(UserConstant.USER_LOGIN_STATE);
+            if (loginUserObj instanceof LoginUserVO loginUser && loginUser.getUserId() != null) {
+                stringRedisTemplate.delete(buildLoginRedisKey(loginUser.getUserId()));
+            }
+            session.removeAttribute(UserConstant.USER_LOGIN_STATE);
+            session.invalidate();
+        }
+
+        Cookie loginCookie = new Cookie(UserConstant.USER_LOGIN_STATE, "");
+        loginCookie.setMaxAge(0);
+        loginCookie.setPath("/");
+        httpResponse.addCookie(loginCookie);
+    }
+
     // private String encryptPassword(String userPassword) {
     //     return DigestUtil.md5Hex(UserConstant.USER_PASSWORD_SALT + userPassword);
     // }

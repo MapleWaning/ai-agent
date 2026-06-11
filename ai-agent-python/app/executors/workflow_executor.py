@@ -1,13 +1,13 @@
 from collections.abc import AsyncIterator
 
-from langchain_core.messages import AIMessageChunk, BaseMessage, HumanMessage
+from langchain_core.messages import BaseMessage, HumanMessage
 from langchain_openai import ChatOpenAI
 
 from app.settings import settings
 from app.tools.tool_registry import get_all_tools
-from app.util.agent_stream import extract_chunk_text
 from app.util.chat_context import ChatContext
 from app.util.sse import format_sse
+from app.util.stream_events import format_agent_stream_chunk
 from app.workflow.graph import build_workflow_graph
 
 
@@ -17,7 +17,6 @@ def _extract_user_input(messages: list[BaseMessage]) -> str:
             content = message.content
             return content if isinstance(content, str) else str(content)
     return ""
-
 
 async def execute_agent(
     model: ChatOpenAI,
@@ -40,14 +39,14 @@ async def execute_agent(
     if context is not None:
         stream_kwargs["context"] = context
 
+    yield format_sse("正在启动复杂工作流...", event="status")
+
     async for chunk in graph.astream(
         initial_state,
         **stream_kwargs,
     ):
-        if not isinstance(chunk, AIMessageChunk):
-            continue
-        text = extract_chunk_text(chunk)
-        if text:
-            yield format_sse(text)
+        sse = format_agent_stream_chunk(chunk)
+        if sse:
+            yield sse
 
-    yield format_sse("done")
+    yield format_sse("done", event="done")

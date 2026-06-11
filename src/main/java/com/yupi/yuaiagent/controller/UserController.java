@@ -13,6 +13,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import lombok.extern.slf4j.Slf4j;
+
+
+@Slf4j
 @RestController
 @RequestMapping("/user")
 public class UserController {
@@ -39,42 +43,66 @@ public class UserController {
     }
 
     /**
-     * 新增用户
+     * 获取当前登录用户
+     */
+    @GetMapping("/current")
+    public BaseResponse<LoginUserVO> getCurrentUser(HttpServletRequest httpRequest) {
+        return BaseResponse.success(userService.getLoginUser(httpRequest));
+    }
+
+    /**
+     * 退出登录
+     */
+    @PostMapping("/logout")
+    public BaseResponse<Boolean> logout(HttpServletRequest httpRequest,
+                                        HttpServletResponse httpResponse) {
+        userService.userLogout(httpRequest, httpResponse);
+        return BaseResponse.success(true);
+    }
+
+    /**
+     * 新增用户（仅管理员）
      */
     @PostMapping("/add")
-    public BaseResponse<Boolean> addUser(@RequestBody User user) {
+    public BaseResponse<Boolean> addUser(@RequestBody User user, HttpServletRequest httpRequest) {
+        userService.checkAdmin(httpRequest);
         return BaseResponse.success(userService.save(user));
     }
 
     /**
-     * 根据 id 删除用户
+     * 根据 id 删除用户（仅管理员）
      */
     @DeleteMapping("/delete/{id}")
-    public BaseResponse<Boolean> deleteUser(@PathVariable("id") Integer id) {
+    public BaseResponse<Boolean> deleteUser(@PathVariable("id") Integer id,
+                                            HttpServletRequest httpRequest) {
+        userService.checkAdmin(httpRequest);
         return BaseResponse.success(userService.removeById(id));
     }
 
     /**
-     * 更新用户
+     * 更新用户（仅管理员）
      */
     @PutMapping("/update")
-    public BaseResponse<Boolean> updateUser(@RequestBody User user) {
+    public BaseResponse<Boolean> updateUser(@RequestBody User user, HttpServletRequest httpRequest) {
+        userService.checkAdmin(httpRequest);
         return BaseResponse.success(userService.updateById(user));
     }
 
     /**
-     * 根据 id 查询用户
+     * 根据 id 查询用户（仅管理员）
      */
     @GetMapping("/get/{id}")
-    public BaseResponse<User> getUser(@PathVariable("id") Integer id) {
+    public BaseResponse<User> getUser(@PathVariable("id") Integer id, HttpServletRequest httpRequest) {
+        userService.checkAdmin(httpRequest);
         return BaseResponse.success(userService.getById(id));
     }
 
     /**
-     * 查询用户列表
+     * 查询用户列表（仅管理员）
      */
     @GetMapping("/list")
-    public BaseResponse<List<User>> listUser() {
+    public BaseResponse<List<User>> listUser(HttpServletRequest httpRequest) {
+        userService.checkAdmin(httpRequest);
         return BaseResponse.success(userService.list());
     }
 }

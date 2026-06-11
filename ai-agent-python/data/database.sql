@@ -18,6 +18,9 @@ CREATE TABLE `user` (
 CREATE TABLE chat (
     chat_id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
+    title VARCHAR(255) NOT NULL DEFAULT '新对话',
+    create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    modify_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES `user`(user_id)
 );
 
@@ -26,6 +29,14 @@ CREATE TABLE chat_history (
     chat_id INT NOT NULL,
     user_id INT NOT NULL,
     content LONGTEXT NOT NULL,
+    `type` ENUM(
+    'normal_chat',
+    'report',
+    'rag',
+    'mcp',
+    'tool',
+    'workflow'
+    ) NOT NULL DEFAULT 'normal_chat',
     FOREIGN KEY (chat_id) REFERENCES chat(chat_id),
     FOREIGN KEY (user_id) REFERENCES `user`(user_id)
 );

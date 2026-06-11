@@ -37,11 +37,12 @@ public class ChatFileServiceImpl implements ChatFileService {
             return List.of();
         }
 
-        try (Stream<Path> stream = Files.list(chatDir)) {
+        // Python 工具会把 PDF 等文件写入 pdf/、download/ 等子目录，需递归扫描
+        try (Stream<Path> stream = Files.walk(chatDir)) {
             return stream
                     .filter(Files::isRegularFile)
                     .sorted(Comparator.comparing(this::getLastModifiedTime).reversed())
-                    .map(this::toVO)
+                    .map(path -> toVO(chatDir, path))
                     .toList();
         } catch (IOException e) {
             log.error("读取会话文件列表失败，userId={}, chatId={}", userId, chatId, e);
@@ -51,11 +52,28 @@ public class ChatFileServiceImpl implements ChatFileService {
 
     @Override
     public Resource loadFileAsResource(Long userId, Long chatId, String fileName) {
+        Path chatDir = getChatDir(userId, chatId);
+        Path filePath = resolveFilePath(chatDir, fileName);
+        return new FileSystemResource(filePath);
+    }
+
+    @Override
+    public void deleteFile(Long userId, Long chatId, String fileName) {
+        Path chatDir = getChatDir(userId, chatId);
+        Path filePath = resolveFilePath(chatDir, fileName);
+        try {
+            Files.delete(filePath);
+        } catch (IOException e) {
+            log.error("删除文件失败，userId={}, chatId={}, fileName={}", userId, chatId, fileName, e);
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "删除文件失败");
+        }
+    }
+
+    private Path resolveFilePath(Path chatDir, String fileName) {
         if (fileName == null || fileName.isBlank()) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "文件名不能为空");
         }
 
-        Path chatDir = getChatDir(userId, chatId);
         Path filePath = chatDir.resolve(fileName).normalize();
 
         if (!filePath.startsWith(chatDir)) {
@@ -66,7 +84,7 @@ public class ChatFileServiceImpl implements ChatFileService {
             throw new BusinessException(ErrorCode.OPERATION_ERROR, "文件不存在");
         }
 
-        return new FileSystemResource(filePath);
+        return filePath;
     }
 
     /**
@@ -96,8 +114,9 @@ public class ChatFileServiceImpl implements ChatFileService {
         return chatDir;
     }
 
-    private ChatFileVO toVO(Path path) {
-        String fileName = path.getFileName().toString();
+    private ChatFileVO toVO(Path chatDir, Path path) {
+        // 使用相对路径（如 pdf/xxx.pdf），与 download/delete 解析逻辑一致
+        String fileName = chatDir.relativize(path).toString().replace('\\', '/');
         long size = getFileSize(path);
 
         return ChatFileVO.builder()

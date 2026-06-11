@@ -17,4 +17,9 @@ public class ChatHistory {
     private Integer userId;
 
     private String content;
+
+    /**
+     * 路由类型，取值：normal_chat / report / rag / mcp / tool / workflow
+     */
+    private String type;
 }

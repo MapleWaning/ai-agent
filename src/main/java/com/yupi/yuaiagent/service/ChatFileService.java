@@ -16,4 +16,9 @@ public interface ChatFileService {
      * 加载指定文件资源
      */
     Resource loadFileAsResource(Long userId, Long chatId, String fileName);
+
+    /**
+     * 删除指定文件
+     */
+    void deleteFile(Long userId, Long chatId, String fileName);
 }

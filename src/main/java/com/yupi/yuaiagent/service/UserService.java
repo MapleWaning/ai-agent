@@ -24,4 +24,14 @@ public interface UserService extends IService<User> {
      * 获取当前登录用户，未登录则抛异常
      */
     LoginUserVO getLoginUser(HttpServletRequest request);
+
+    /**
+     * 校验当前用户为管理员
+     */
+    void checkAdmin(HttpServletRequest request);
+
+    /**
+     * 退出登录，清除 Session、Redis、Cookie
+     */
+    void userLogout(HttpServletRequest httpRequest, HttpServletResponse httpResponse);
 }

@@ -16,6 +16,6 @@ async def execute_agent(
     async for chunk in model.astream(messages):
         text = extract_chunk_text(chunk)
         if text:
-            yield format_sse(text)
+            yield format_sse(text, event="message")
 
-    yield format_sse("done")
+    yield format_sse("done", event="done")

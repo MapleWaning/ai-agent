@@ -61,7 +61,7 @@ def mock_stream_langchain_agent(monkeypatch: pytest.MonkeyPatch) -> None:
 @pytest.fixture(autouse=True)
 def mock_rag_service(monkeypatch: pytest.MonkeyPatch) -> None:
     class FakeRAGService:
-        def assemble_message(self, user_message: str) -> str:
+        def assemble_message(self, user_message: str, query: str | None = None) -> str:
             return f"知识库参考内容：\ntest context\n\n用户问题：\n{user_message}"
 
     monkeypatch.setattr(
@@ -71,12 +71,12 @@ def mock_rag_service(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 STREAM_CASES = [
-    ("normal_chat", "NORMAL_CHAT", "data: 你好"),
-    ("report", "REPORT", "data: 你好"),
-    ("rag", "RAG", "data: 你好"),
-    ("mcp", "MCP", "data: 你好"),
-    ("tool", "TOOL", "data: 你好"),
-    ("workflow", "WORKFLOW", "data: 你好"),
+    ("normal_chat", "NORMAL_CHAT", 'data: "你好"'),
+    ("report", "REPORT", 'data: "你好"'),
+    ("rag", "RAG", 'data: "你好"'),
+    ("mcp", "MCP", 'data: "你好"'),
+    ("tool", "TOOL", 'data: "你好"'),
+    ("workflow", "WORKFLOW", 'data: "你好"'),
 ]
 
 
@@ -104,5 +104,5 @@ def test_chat_stream_dispatches_to_executor(
 
     assert expected_marker in body
     if route_type in {"normal_chat", "report", "rag", "mcp", "tool", "workflow"}:
-        assert "data: ，世界" in body
-        assert "data: done" in body
+        assert 'data: "，世界"' in body
+        assert 'data: "done"' in body

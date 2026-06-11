@@ -29,5 +29,8 @@ def create_amap_mcp_client(api_key: str | None = None) -> MultiServerMCPClient:
 
 
 async def get_amap_mcp_tools(api_key: str | None = None) -> list[BaseTool]:
+    from app.mcp.tool_wrapper import wrap_tool_with_stream_events
+
     client = create_amap_mcp_client(api_key)
-    return await client.get_tools()
+    tools = await client.get_tools()
+    return [wrap_tool_with_stream_events(tool) for tool in tools]

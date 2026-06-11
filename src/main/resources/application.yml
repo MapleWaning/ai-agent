@@ -3,6 +3,15 @@ spring:
     name: yu-ai-agent
   profiles:
     active: local
+# 日志配置：控制台编码与 Windows GBK 终端保持一致，避免中文乱码（部署到 UTF-8 终端时改为 UTF-8）
+logging:
+  charset:
+    console: GBK
+# 自定义配置
+yu:
+  log:
+    # 是否在接口请求日志中打印发送参数（入参）
+    show-request-args: true
 # 临时注释掉，便于大家开发调试和部署（实际填写数据库信息）
 #  datasource:
 #    url: xxx
@@ -26,7 +35,7 @@ springdoc:
       packages-to-scan: com.yupi.yuaiagent.controller
 # knife4j config
 knife4j:
-  enable: true
+  enable: false
   setting:
     language: zh_cn
 # searchAPI

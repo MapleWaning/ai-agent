@@ -11,6 +11,7 @@ public enum ErrorCode {
     USER_NOT_FOUND(40400, "用户不存在"),
     PASSWORD_ERROR(40100, "密码错误"),
     NOT_LOGIN_ERROR(40103, "未登录"),
+    NO_AUTH_ERROR(40104, "无权限"),
     PASSWORD_NOT_MATCH(40002, "两次密码不一致"),
     OPERATION_ERROR(50000, "操作失败");
 
